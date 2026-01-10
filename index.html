@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title id="documentTitle">Catálogo Dental - Sistema de Tratamientos y Presupuestos</title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="header-left">
+      <img id="appLogoImg" class="header-logo" src="" alt="Logo" />
+      <div>
+        <h1 id="appNameDisplay">💊 Catálogo Dental</h1>
+        <p>Gestión de Tratamientos y Presupuestos</p>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <select class="currency-selector" id="currencySelector">
+        <option value="PEN">S/ Soles</option>
+        <option value="USD">US$ Dólares</option>
+        <option value="EUR">€ Euros</option>
+      </select>
+
+      <button class="btn btn-secondary" id="settingsButton">⚙️ Ajustes</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <div id="successMessage"></div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="view">📋 Ver Tratamientos</button>
+      <button class="tab-btn" data-tab="manage">⚙️ Gestionar</button>
+      <button class="tab-btn" data-tab="budgets">🧾 Presupuestos</button>
+      <button class="tab-btn" data-tab="export">📊 Exportar</button>
+    </div>
+
+    <!-- Botón nuevo tratamiento -->
+    <button class="btn btn-primary" onclick="openModal()" style="margin-bottom: 2rem;">
+      ➕ Nuevo Tratamiento
+    </button>
+
+    <!-- Buscador de tratamientos -->
+    <div class="form-group" style="margin-bottom: 1.5rem;">
+      <label class="form-label" for="treatmentSearch">Buscar tratamientos</label>
+      <input
+        id="treatmentSearch"
+        class="form-input"
+        type="search"
+        placeholder="Escribe nombre o descripción..."
+      />
+    </div>
+
+    <!-- TAB: Ver tratamientos -->
+    <section id="view" class="tab-content active">
+      <div id="servicesGrid" class="services-grid"></div>
+    </section>
+
+    <!-- TAB: Gestionar tratamientos -->
+    <section id="manage" class="tab-content">
+      <div id="manageGrid" class="services-grid"></div>
+    </section>
+
+    <!-- TAB: Presupuestos -->
+    <section id="budgets" class="tab-content">
+      <h2>➕ Nuevo Presupuesto</h2>
+
+      <div class="form-group">
+        <label class="form-label" for="budgetClientName">Nombre del Cliente</label>
+        <input id="budgetClientName" class="form-input" type="text" placeholder="Nombre del cliente" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="budgetClientPhone">Número de celular (WhatsApp)</label>
+        <input
+          id="budgetClientPhone"
+          class="form-input"
+          type="tel"
+          placeholder="Ej: 51987654321 (sin espacios)"
+        />
+        <small style="color: var(--color-text-secondary); font-size: 0.8rem;">
+          Usa formato internacional sin signos (+, -, espacios). Ej: 51987654321.
+        </small>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="treatmentSelect">Seleccionar Tratamiento</label>
+        <select id="treatmentSelect" class="form-select">
+          <option value="">-- Selecciona un tratamiento --</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="subcategorySelect">Subcategoría (opcional)</label>
+        <select id="subcategorySelect" class="form-select" disabled>
+          <option value="">-- Sin subcategoría --</option>
+        </select>
+      </div>
+
+      <button class="btn btn-primary" onclick="addToBudget()">➕ Agregar</button>
+
+      <h3 style="margin-top: 1.5rem;">Items del Presupuesto</h3>
+
+      <table class="budget-table">
+        <thead>
+          <tr>
+            <th>Tratamiento</th>
+            <th>Subcategoría</th>
+            <th>Precio</th>
+            <th>Acción</th>
+          </tr>
+        </thead>
+        <tbody id="budgetItems"></tbody>
+      </table>
+
+      <div id="budgetTotal" class="budget-total">Total: S/ 0.00</div>
+
+      <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+        <button class="btn btn-success" onclick="saveBudget()">💾 Guardar</button>
+        <button class="btn btn-secondary" onclick="clearBudget()">🗑️ Limpiar</button>
+        <button class="btn btn-primary" onclick="printCurrentBudget()">🖨️ Imprimir</button>
+      </div>
+
+      <h3 style="margin-top: 2rem;">📋 Presupuestos Guardados</h3>
+      <div id="savedBudgets"></div>
+    </section>
+
+    <!-- TAB: Exportar -->
+    <section id="export" class="tab-content">
+      <h2>📊 Exportar Datos</h2>
+      <p>Descarga tus tratamientos en formato JSON para respaldo.</p>
+
+      <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem;">
+        <button class="btn btn-primary" onclick="exportJSON()">📥 Descargar JSON</button>
+        <button class="btn btn-secondary" onclick="copyJSON()">📋 Copiar</button>
+        <button class="btn btn-success" onclick="importJSON()">📤 Importar JSON</button>
+      </div>
+
+      <input type="file" id="importFile" accept="application/json" style="display: none;" />
+    </section>
+  </main>
+
+  <!-- Modal Tratamiento -->
+  <div class="modal" id="treatmentModal">
+    <div class="modal__content">
+      <button class="modal__close" onclick="closeModal()">×</button>
+      <h2 class="modal__title" id="modalTitle">Nuevo Tratamiento</h2>
+
+      <div class="form-group">
+        <label class="form-label" for="treatmentName">Nombre del Tratamiento</label>
+        <input id="treatmentName" class="form-input" type="text" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="treatmentDesc">Descripción Corta</label>
+        <textarea id="treatmentDesc" class="form-textarea" rows="3"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="treatmentPrice">Precio Base (opcional)</label>
+        <input id="treatmentPrice" class="form-input" type="number" step="0.01" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="treatmentImage">URL de Imagen</label>
+        <input id="treatmentImage" class="form-input" type="url" />
+      </div>
+
+      <hr style="margin: 1.5rem 0;" />
+
+      <h3>Subcategorías</h3>
+
+      <div
+        class="form-group"
+        style="display: grid; grid-template-columns: 1.4fr 1fr 1.5fr 1.5fr auto; gap: 0.5rem; align-items: center;"
+      >
+        <input id="subName" class="form-input" type="text" placeholder="Nombre subcategoría" />
+        <input id="subPrice" class="form-input" type="number" step="0.01" placeholder="Precio" />
+        <input id="subDesc" class="form-input" type="text" placeholder="Descripción corta" />
+        <input id="subImage" class="form-input" type="url" placeholder="URL imagen (opcional)" />
+        <button class="btn btn-primary" onclick="addSubcategory()">➕</button>
+      </div>
+
+      <div id="subcategoriesList"></div>
+
+      <div style="margin-top: 1.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+        <button class="btn btn-success" onclick="saveTreatment()">💾 Guardar</button>
+        <button class="btn btn-secondary" onclick="closeModal()">❌ Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Ajustes -->
+  <div class="modal" id="settingsModal">
+    <div class="modal__content">
+      <button class="modal__close" onclick="closeSettings()">×</button>
+      <h2 class="modal__title">Ajustes de la App</h2>
+
+      <div class="form-group">
+        <label class="form-label" for="appNameInput">Nombre de la App</label>
+        <input id="appNameInput" class="form-input" type="text" placeholder="Ej: Catálogo Dental Gniius" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="appLogoInput">URL del Logo</label>
+        <input id="appLogoInput" class="form-input" type="url" placeholder="https://..." />
+        <small style="color: var(--color-text-secondary); font-size: 0.8rem;">
+          Idealmente logo cuadrado o circular en PNG/SVG.
+        </small>
+      </div>
+
+      <div style="margin-top: 1.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+        <button class="btn btn-success" onclick="saveSettings()">💾 Guardar ajustes</button>
+        <button class="btn btn-secondary" onclick="closeSettings()">❌ Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Imagen (Lightbox) -->
+  <div class="image-modal" id="imageModal">
+    <div class="image-modal__backdrop" id="imageModalBackdrop"></div>
+    <div class="image-modal__content">
+      <button class="image-modal__close" id="imageModalClose">×</button>
+      <img id="imageModalImg" alt="Imagen tratamiento" />
+      <p id="imageModalCaption" class="image-modal__caption"></p>
+    </div>
+  </div>
+
+  <!-- JS -->
+  <script src="app.js"></script>
+</body>
+</html>
