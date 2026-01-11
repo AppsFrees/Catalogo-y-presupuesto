@@ -1,4 +1,5 @@
 // ========== CONFIGURACIÓN ==========
+// ========== CONFIGURACIÓN ==========
 
 const EXCHANGE_RATES = {
   PEN: 1,
@@ -368,6 +369,7 @@ function removeSubcategory(id) {
   renderModalSubs();
 }
 
+// Subcategorías totalmente editables en el modal
 function renderModalSubs() {
   const container = document.getElementById('subcategoriesList');
 
@@ -380,22 +382,57 @@ function renderModalSubs() {
     .map(
       sub => `
       <div class="budget-card__item">
-        <div>
-          <strong>${sub.nombre}</strong>
-          ${
-            sub.descripcion
-              ? `<div style="font-size:0.8rem;color:var(--color-text-secondary);">${sub.descripcion}</div>`
-              : ''
-          }
+        <div style="flex:1;">
+          <input
+            class="form-input"
+            type="text"
+            value="${sub.nombre}"
+            placeholder="Nombre subcategoría"
+            onchange="updateSubcategoryField(${sub.id}, 'nombre', this.value)"
+            style="margin-bottom:0.3rem;"
+          />
+          <input
+            class="form-input"
+            type="text"
+            value="${sub.descripcion || ''}"
+            placeholder="Descripción corta"
+            onchange="updateSubcategoryField(${sub.id}, 'descripcion', this.value)"
+          />
         </div>
-        <div style="display:flex;align-items:center;gap:0.5rem;">
-          <span>${formatPrice(sub.precio)}</span>
-          <button class="btn btn-secondary" style="flex:0;" onclick="removeSubcategory(${sub.id})">🗑️</button>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.4rem;margin-left:0.5rem;">
+          <input
+            class="form-input"
+            type="number"
+            step="0.01"
+            value="${sub.precio}"
+            placeholder="Precio"
+            onchange="updateSubcategoryField(${sub.id}, 'precio', parseFloat(this.value) || 0)"
+            style="width:110px;"
+          />
+          <input
+            class="form-input"
+            type="url"
+            value="${sub.imagen || ''}"
+            placeholder="URL imagen"
+            onchange="updateSubcategoryField(${sub.id}, 'imagen', this.value)"
+            style="width:110px;"
+          />
+          <button class="btn btn-secondary" style="flex:0;margin-top:0.25rem;" onclick="removeSubcategory(${sub.id})">🗑️</button>
         </div>
       </div>
     `
     )
     .join('');
+}
+
+// Actualiza campos de una subcategoría en el array temporal
+function updateSubcategoryField(id, field, value) {
+  tempSubcategories = tempSubcategories.map(sub => {
+    if (sub.id === id) {
+      return { ...sub, [field]: value };
+    }
+    return sub;
+  });
 }
 
 function isValidImageUrl(url) {
@@ -522,7 +559,6 @@ function renderTreatmentCard(treatment, showButtons = false) {
 function renderAll() {
   const allTreatments = manager.getAll();
 
-  // Filtrado por buscador (nombre + descripción). [web:59][web:74]
   const filteredTreatments = currentSearchTerm
     ? allTreatments.filter(t => {
         const nombre = (t.nombre || '').toLowerCase();
@@ -975,7 +1011,6 @@ document.addEventListener('keydown', e => {
 });
 
 function attachImageClickHandlers() {
-  // Imágenes principales de tratamientos
   document.querySelectorAll('.treatment-img').forEach(img => {
     img.addEventListener('click', () => {
       const caption = img.alt || 'Imagen de tratamiento';
@@ -983,7 +1018,6 @@ function attachImageClickHandlers() {
     });
   });
 
-  // Imágenes de subcategorías
   document.querySelectorAll('.sub-img').forEach(img => {
     img.addEventListener('click', () => {
       const fullSrc = img.dataset.fullsrc || img.src;
@@ -1044,13 +1078,12 @@ window.addEventListener('DOMContentLoaded', function () {
   renderAll();
 });
 
-// Cerrar modal de tratamiento al hacer clic fuera
 document.getElementById('treatmentModal').addEventListener('click', function (e) {
   if (e.target === this) closeModal();
 });
 
-// Cerrar modal de ajustes al hacer clic fuera
 document.getElementById('settingsModal').addEventListener('click', function (e) {
   if (e.target === this) closeSettings();
 });
+
 
