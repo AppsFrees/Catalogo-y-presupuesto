@@ -436,6 +436,11 @@ function updateSubcategoryField(id, field, value) {
 }
 
 function isValidImageUrl(url) {
+  function isVideoUrl(url) {
+  if (!url) return false;
+  return /\.(mp4|webm|ogg)$/i.test(url);
+}
+
   if (!url) return true;
   try {
     new URL(url);
@@ -499,35 +504,57 @@ function renderTreatmentCard(treatment, showButtons = false) {
     ? `<div class="service-card__price">${formatPrice(treatment.precio)}</div>`
     : '';
 
-  let subsHTML = '';
-  if (hasSubs) {
-    subsHTML += '<div class="service-card__description"><strong>💊 Opciones:</strong></div>';
-    subsHTML += '<div class="budget-card__items">';
-    treatment.subcategorias.forEach(sub => {
-      const subImgHTML = sub.imagen
-        ? `<img src="${sub.imagen}" alt="${sub.nombre}" class="sub-img" data-fullsrc="${sub.imagen}" data-caption="${sub.nombre} - ${sub.descripcion || ''}">`
-        : '';
-      subsHTML += `
-        <div class="budget-card__item">
-          <div style="display:flex;align-items:center;gap:0.75rem;">
-            ${subImgHTML}
-            <div>
-              <div class="subchip">
-                <span>${sub.nombre}</span>
-                <span>${formatPrice(sub.precio)}</span>
-              </div>
-              ${
-                sub.descripcion
-                  ? `<div style="font-size:0.78rem;color:var(--color-text-secondary);margin-top:0.15rem;">${sub.descripcion}</div>`
-                  : ''
-              }
-            </div>
+ let subsHTML = '';
+if (hasSubs) {
+  subsHTML += '<div class="service-card__description"><strong>💊 Opciones:</strong></div>';
+  subsHTML += '<div class="budget-card__items">';
+  treatment.subcategorias.forEach(sub => {
+    let mediaHTML = '';
+    if (sub.imagen) {
+      if (isVideoUrl(sub.imagen)) {
+        // Video en subcategoría
+        mediaHTML = `
+          <video
+            class="sub-img"
+            src="${sub.imagen}"
+            controls
+            playsinline
+            muted
+          ></video>
+        `;
+      } else {
+        // Imagen en subcategoría
+        mediaHTML = `
+          <img
+            src="${sub.imagen}"
+            alt="${sub.nombre}"
+            class="sub-img"
+            data-fullsrc="${sub.imagen}"
+            data-caption="${sub.nombre} - ${sub.descripcion || ''}"
+          >
+        `;
+      }
+    }
+
+    subsHTML += `
+      <div class="sub-row">
+        ${mediaHTML}
+        <div class="sub-text">
+          <div class="subchip">
+            <span>${sub.nombre}</span>
+            <span>${formatPrice(sub.precio)}</span>
           </div>
+          ${
+            sub.descripcion
+              ? `<div class="sub-text-desc">${sub.descripcion}</div>`
+              : ''
+          }
         </div>
-      `;
-    });
-    subsHTML += '</div>';
-  }
+      </div>
+    `;
+  });
+  subsHTML += '</div>';
+}
 
   const imgHTML = treatment.imagen
     ? `<img src="${treatment.imagen}" alt="${treatment.nombre}" class="treatment-img">`
