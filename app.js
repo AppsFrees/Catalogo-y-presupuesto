@@ -368,7 +368,7 @@ function removeSubcategory(id) {
   renderModalSubs();
 }
 
-// Subcategorías editables en el modal
+// Subcategorías totalmente editables en el modal
 function renderModalSubs() {
   const container = document.getElementById('subcategoriesList');
 
@@ -412,7 +412,7 @@ function renderModalSubs() {
             class="form-input"
             type="url"
             value="${sub.imagen || ''}"
-            placeholder="URL imagen / video"
+            placeholder="URL imagen"
             onchange="updateSubcategoryField(${sub.id}, 'imagen', this.value)"
             style="width:110px;"
           />
@@ -424,7 +424,7 @@ function renderModalSubs() {
     .join('');
 }
 
-// actualiza campos de subcategoría
+// Actualiza campos de una subcategoría en el array temporal
 function updateSubcategoryField(id, field, value) {
   tempSubcategories = tempSubcategories.map(sub => {
     if (sub.id === id) {
@@ -434,7 +434,6 @@ function updateSubcategoryField(id, field, value) {
   });
 }
 
-// Valida URL de imagen (se mantiene para el tratamiento principal)
 function isValidImageUrl(url) {
   if (!url) return true;
   try {
@@ -443,12 +442,6 @@ function isValidImageUrl(url) {
   } catch {
     return false;
   }
-}
-
-// Detecta si una URL es video (para subcategorías)
-function isVideoUrl(url) {
-  if (!url) return false;
-  return /\.(mp4|webm|ogg)$/i.test(url);
 }
 
 function saveTreatment() {
@@ -505,52 +498,29 @@ function renderTreatmentCard(treatment, showButtons = false) {
     ? `<div class="service-card__price">${formatPrice(treatment.precio)}</div>`
     : '';
 
-  // Subcategorías: ahora soportan imagen o video
   let subsHTML = '';
   if (hasSubs) {
     subsHTML += '<div class="service-card__description"><strong>💊 Opciones:</strong></div>';
     subsHTML += '<div class="budget-card__items">';
     treatment.subcategorias.forEach(sub => {
-      let mediaHTML = '';
-      if (sub.imagen) {
-        if (isVideoUrl(sub.imagen)) {
-          // Video en subcategoría
-          mediaHTML = `
-            <video
-              class="sub-img"
-              src="${sub.imagen}"
-              controls
-              playsinline
-              muted
-            ></video>
-          `;
-        } else {
-          // Imagen en subcategoría (con lightbox)
-          mediaHTML = `
-            <img
-              src="${sub.imagen}"
-              alt="${sub.nombre}"
-              class="sub-img"
-              data-fullsrc="${sub.imagen}"
-              data-caption="${sub.nombre} - ${sub.descripcion || ''}"
-            >
-          `;
-        }
-      }
-
+      const subImgHTML = sub.imagen
+        ? `<img src="${sub.imagen}" alt="${sub.nombre}" class="sub-img" data-fullsrc="${sub.imagen}" data-caption="${sub.nombre} - ${sub.descripcion || ''}">`
+        : '';
       subsHTML += `
-        <div class="sub-row">
-          ${mediaHTML}
-          <div class="sub-text">
-            <div class="subchip">
-              <span>${sub.nombre}</span>
-              <span>${formatPrice(sub.precio)}</span>
+        <div class="budget-card__item">
+          <div style="display:flex;align-items:center;gap:0.75rem;">
+            ${subImgHTML}
+            <div>
+              <div class="subchip">
+                <span>${sub.nombre}</span>
+                <span>${formatPrice(sub.precio)}</span>
+              </div>
+              ${
+                sub.descripcion
+                  ? `<div style="font-size:0.78rem;color:var(--color-text-secondary);margin-top:0.15rem;">${sub.descripcion}</div>`
+                  : ''
+              }
             </div>
-            ${
-              sub.descripcion
-                ? `<div class="sub-text-desc">${sub.descripcion}</div>`
-                : ''
-            }
           </div>
         </div>
       `;
@@ -1040,7 +1010,6 @@ document.addEventListener('keydown', e => {
 });
 
 function attachImageClickHandlers() {
-  // Imágenes principales
   document.querySelectorAll('.treatment-img').forEach(img => {
     img.addEventListener('click', () => {
       const caption = img.alt || 'Imagen de tratamiento';
@@ -1048,8 +1017,7 @@ function attachImageClickHandlers() {
     });
   });
 
-  // Imágenes de subcategorías (videos no usan lightbox)
-  document.querySelectorAll('.sub-img[data-fullsrc]').forEach(img => {
+  document.querySelectorAll('.sub-img').forEach(img => {
     img.addEventListener('click', () => {
       const fullSrc = img.dataset.fullsrc || img.src;
       const caption = img.dataset.caption || img.alt || '';
@@ -1116,3 +1084,4 @@ document.getElementById('treatmentModal').addEventListener('click', function (e)
 document.getElementById('settingsModal').addEventListener('click', function (e) {
   if (e.target === this) closeSettings();
 });
+
