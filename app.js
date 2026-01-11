@@ -541,7 +541,7 @@ function renderAll() {
       ? filteredTreatments.map(t => renderTreatmentCard(t, true)).join('')
       : '<p class="empty-state">No se encontraron tratamientos</p>';
 
-  populateTreatmentSelect(); // el select sigue usando todos los tratamientos
+  populateTreatmentSelect();
   renderSavedBudgets();
   attachImageClickHandlers();
 }
@@ -1053,3 +1053,4 @@ document.getElementById('treatmentModal').addEventListener('click', function (e)
 document.getElementById('settingsModal').addEventListener('click', function (e) {
   if (e.target === this) closeSettings();
 });
+
